@@ -8,8 +8,8 @@ import java.util.List;
 
 public interface UsersRepository extends JpaRepository<Users, Integer> {
 
-    @Query(nativeQuery=true, value="select * from users where type=?1")
-    List<Users> findByType(String type);
+    @Query(nativeQuery=true, value="select * from users where authorizedResource=?1")
+    List<Users> listUsersRsc(int authorizeResource);
 
     @Query(nativeQuery=true, value="select * from users where type=?1 and authorizedResource = ?2")
     List<Users> listaUsuariosAutorizados(String type, int authorizedResource);

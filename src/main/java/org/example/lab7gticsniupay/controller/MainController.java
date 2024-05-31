@@ -15,7 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 
-@RestController("/niupay")
+@RestController()
+@RequestMapping("/niupay")
 public class MainController {
     final UsersRepository usersRepository;
     final ResourcesRepository resourcesRepository;
@@ -33,12 +34,16 @@ public class MainController {
         String idResourceStr = user.getAuthorizedResource();
         int idResource = Integer.parseInt(idResourceStr);
         //Si se trata de un usuario tipo contador, en la bd id=5 está para el recurso de servidor de contabilidad
-        if(idResource== 5){
-            if(user.getType()!="Contador"){
-                responseJson.put("estado", "no está autorizado");
-            }else{
-                responseJson.put("estado", "está autorizado");
+        if(user.isActive()){
+            if(idResource==5){
+                if(user.getType().equalsIgnoreCase("contador")){
+                    responseJson.put("estado", "está autorizado");
+                }else{
+                    responseJson.put("estado", "no está autorizado");
+                }
             }
+        }else{
+            responseJson.put("estado", "no está autorizado");
         }
         usersRepository.save(user);
         if (fetchId) {
@@ -49,34 +54,35 @@ public class MainController {
     }
 
     //Listado de usuarios que puedan autenticarse y autorizarse
-    @GetMapping(value="/{type}")
-    public ResponseEntity<HashMap<String,Object>> listarPlayersRegion(@PathVariable("type") String type){
+    @GetMapping(value="/{resourceId}")
+    public ResponseEntity<HashMap<String,Object>> listarPlayersRegion(@PathVariable("resourceId") String rscIdStr){
         HashMap<String, Object> responseJson = new HashMap<>();
+        int rscId = Integer.parseInt(rscIdStr);
 
         try{
-            List<Users> listaUsuariosPorTipo = usersRepository.findByType(type);
+            List<Users> listaUsuariosPorRsc = usersRepository.listUsersRsc(rscId);
 
-            if (!listaUsuariosPorTipo.isEmpty()){
-                if(type.equals("Contador")){
-                    responseJson.put("result","success");
-                    responseJson.put("usuarios", usersRepository.listaUsuariosAutorizados(type,5));
+            if (!listaUsuariosPorRsc.isEmpty()){
+                String typeUser = null;
+                if(rscId==5){
+                    typeUser = "Contador";
                 }
-                if(type.equals("Cliente")){
-                    responseJson.put("result","success");
-                    responseJson.put("usuarios", usersRepository.listaUsuariosAutorizados(type,6));
+                if(rscId==6){
+                    typeUser = "Cliente";
                 }
-                if(type.equals("Analista de promociones")){
-                    responseJson.put("result","success");
-                    responseJson.put("usuarios", usersRepository.listaUsuariosAutorizados(type,7));
+                if(rscId==7){
+                    typeUser = "Analista de promociones";
                 }
-                if(type.equals("Analista logico")){
-                    responseJson.put("result","success");
-                    responseJson.put("usuarios", usersRepository.listaUsuariosAutorizados(type,8));
+                if(rscId==8){
+                    typeUser = "Analista logico";
                 }
+                List<Users> listaUsuariosAutorizadosPorRsc = usersRepository.listaUsuariosAutorizados(typeUser,rscId);
+                responseJson.put("result","success");
+                responseJson.put("users", listaUsuariosPorRsc);
                 return ResponseEntity.ok().body(responseJson);
             } else {
                 responseJson.put("result","failure");
-                responseJson.put("msg","usuarios no encontrados");
+                responseJson.put("msg","usuarios no encontrados o no hay usuarios");
                 return ResponseEntity.badRequest().body(responseJson);
             }
         }catch (NumberFormatException e) {
