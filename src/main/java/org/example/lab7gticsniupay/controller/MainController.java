@@ -79,7 +79,7 @@ public class MainController {
                 }
                 List<Users> listaUsuariosAutorizadosPorRsc = usersRepository.listaUsuariosAutorizados(typeUser,rscId);
                 responseJson.put("result","success");
-                responseJson.put("users", listaUsuariosPorRsc);
+                responseJson.put("users", listaUsuariosAutorizadosPorRsc);
                 return ResponseEntity.ok().body(responseJson);
             } else {
                 responseJson.put("result","failure");
