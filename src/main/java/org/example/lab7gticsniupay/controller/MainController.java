@@ -34,6 +34,7 @@ public class MainController {
         String idResourceStr = user.getAuthorizedResource();
         int idResource = Integer.parseInt(idResourceStr);
         //Si se trata de un usuario tipo contador, en la bd id=5 está para el recurso de servidor de contabilidad
+
         if(user.isActive()){
             if(idResource==5){
                 if(user.getType().equalsIgnoreCase("contador")){
@@ -87,11 +88,34 @@ public class MainController {
             }
         }catch (NumberFormatException e) {
             responseJson.put("result","failure");
-            responseJson.put("msg","Usuarios  no encontrados");
+            responseJson.put("msg","Usuarios  no encontrados o no existe el idResource");
             return ResponseEntity.badRequest().body(responseJson);
         }
+
+
     }
 
+    @DeleteMapping(value = "/delete/{userId}", consumes={MediaType.APPLICATION_FORM_URLENCODED_VALUE})
+    public ResponseEntity<HashMap<String,Object>> deletePlayer(@PathVariable("userId") String idStr){
+
+        HashMap<String, Object> responseMap = new HashMap<>();
+        try{
+            int id = Integer.parseInt(idStr);
+            Optional<Users> optById = usersRepository.findById(id);
+            if(optById.isPresent()){
+                usersRepository.deleteById(id);
+                responseMap.put("estado","borrado exitoso");
+            }else{
+                responseMap.put("estado","error");
+                responseMap.put("msg","el ID enviado no existe");
+            }
+            return ResponseEntity.ok(responseMap);
+        }catch (NumberFormatException e){
+            responseMap.put("estado","error");
+            responseMap.put("msg","El ID debe ser un número");
+            return ResponseEntity.badRequest().body(responseMap);
+        }
+    }
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<HashMap<String,String>> gestionExcepcion(HttpServletRequest request){
 
